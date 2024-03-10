@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  font-family: "Kanit", sans-serif;
+}
+h1 {
+  font-family: "Kanit", sans-serif;
+}
+
+.placeholder-custom::placeholder {
+  font-family: "Kanit", sans-serif;
+}
