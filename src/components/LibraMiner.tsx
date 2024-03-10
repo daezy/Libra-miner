@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from "../assets/libra logo 1.png";
+import logo from "../assets/libralogo.png";
 
 const LibraMiner = () => {
   const [disabled, setDisabled] = useState(true);
@@ -20,7 +20,7 @@ const LibraMiner = () => {
             Interest Derivative.
           </p>
         </div>
-        <div className="lg:w-[32%] md:w-[50%] w-[70%] mt-10 ">
+        <div className="lg:w-[32%] md:w-[50%] w-[90%] mt-10 ">
           <div className="bg-white p-3 w-full rounded-[10px]  shadow-lg pb-5">
             <div className="px-2 py-2 flex justify-between ">
               <p className="font-light text-[#5d5d5d]">Contract</p>
