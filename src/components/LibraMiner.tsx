@@ -14,6 +14,8 @@ const Miner = () => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
 
+
+
   useEffect(() => {
     let providers: anchor.Provider;
 
@@ -52,24 +54,24 @@ const Miner = () => {
           </div>
           <div className="lg:w-[32%] md:w-[50%] w-[90%] my-8 ">
             <div className="bg-white p-3 w-full rounded-[10px]  shadow-lg pb-5">
+              {/*<div className="px-2 py-2 flex justify-between ">*/}
+              {/*  <p className="font-light text-[#5d5d5d]">Contract</p>*/}
+              {/*  <p className="text-[#011556] font-bold">0.0 SOL</p>*/}
+              {/*</div>*/}
               <div className="px-2 py-2 flex justify-between ">
-                <p className="font-light text-[#5d5d5d]">Contract</p>
+                <p className="font-light text-[#5d5d5d]">Sol Balance</p>
                 <p className="text-[#011556] font-bold">0.0 SOL</p>
               </div>
               <div className="px-2 py-2 flex justify-between ">
-                <p className="font-light text-[#5d5d5d]">Wallet</p>
+                <p className="font-light text-[#5d5d5d]">Total Locked</p>
                 <p className="text-[#011556] font-bold">0.0 SOL</p>
-              </div>
-              <div className="px-2 py-2 flex justify-between ">
-                <p className="font-light text-[#5d5d5d]">Your Libra</p>
-                <p className="text-[#011556] font-bold">0.0 LIBRA</p>
               </div>
               {hasMined ? (
                 <div className="border-b pb-3 border-[#c5c5c5]">
                   <div className="px-2 py-2 mt-2  border ">
                     <input
                       type="number"
-                      placeholder="0.0 LIBRA"
+                      placeholder="0.0 SOL"
                       className="outline-none placeholder-[#011556] placeholder-custom w-full placeholder-text-right"
                     />
                   </div>
@@ -82,7 +84,7 @@ const Miner = () => {
                       }
                       disabled={disabled}
                     >
-                      <p>MINE LIBRA</p>
+                      <p>DEPOSIT SOL</p>
                     </button>
                   </div>
                 </div>
@@ -91,7 +93,7 @@ const Miner = () => {
                   <div className="px-2 py-2 mt-2  border ">
                     <input
                       type="number"
-                      placeholder="0.0 LIBRA"
+                      placeholder="0.0 SOL"
                       className="outline-none placeholder-[#011556] placeholder-custom w-full placeholder-text-right"
                     />
                   </div>
@@ -104,7 +106,7 @@ const Miner = () => {
                       }
                       disabled={disabled}
                     >
-                      <p>MINE LIBRA</p>
+                      <p>DEPOSIT SOL</p>
                     </button>
                   </div>
                 </div>
@@ -123,7 +125,7 @@ const Miner = () => {
                     }
                     disabled={disabled}
                   >
-                    <p>RE-MINE</p>
+                    <p>COMPOUND</p>
                   </button>
                   <button
                     className={
@@ -133,7 +135,7 @@ const Miner = () => {
                     }
                     disabled={disabled}
                   >
-                    <p>TAKE SOL</p>
+                    <p>CLAIM REWARD</p>
                   </button>
                 </div>
               </div>
