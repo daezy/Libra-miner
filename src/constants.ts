@@ -1,0 +1,1 @@
+export const INITIALIZER = "FVHN3NdiUvfdzWRGji9uFzGALqSy7u2qF2zcwZcRTgmV"
