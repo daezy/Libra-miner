@@ -15,6 +15,7 @@ const Miner = () => {
   const [solBalance, setSolBalance] = useState<string>("0");
   const [contractData, setContractData] = useState<ContractData>();
   const [userData, setUserData] = useState<UserData>();
+  const [currentReward, setCurrentReward] = useState<string>("0.0000");
   const [depositAmount, setDepositAmount] = useState<number>(0);
 
   const [program, setProgram] = useState<anchor.Program>();
@@ -109,6 +110,17 @@ const Miner = () => {
       "No active user account found for program to claim..."
     }
   }
+
+  const calculateRewards = async () => {
+    if (userData && contractData) {
+      const apy = (contractData.apy as unknown as anchor.BN).toNumber();
+      const devFee = (contractData.devFee as unknown as anchor.BN).toNumber();
+      const interval = (Date.now()/1000) - userData.depositTs;
+      const totalReward = (userData.totalLocked * apy * interval)/(10000 * 31536000);
+      const expectedReward = ((10000-devFee) * totalReward)/10000;
+      setCurrentReward(expectedReward.toFixed(4));
+    }
+  }
   
 
   const setUp = async (program: anchor.Program, wallet: AnchorWallet) => {
@@ -140,7 +152,8 @@ const Miner = () => {
     const solBalance = await provider?.connection.getBalance(wallet.publicKey);
     if (solBalance) {
       setSolBalance((solBalance/LAMPORTS_PER_SOL).toFixed(2));
-    }
+    };
+    await calculateRewards();
   }
 
 
@@ -223,7 +236,7 @@ const Miner = () => {
               <div className="mt-2">
                 <div className="px-2 py-2 flex justify-between">
                   <p className="font-semibold text-[#011556]">Your Rewards</p>
-                  <p className="text-[#011556] font-bold">0.0 SOL</p>
+                  <p className="text-[#011556] font-bold">{currentReward} SOL</p>
                 </div>
                 <div className="flex justify-between gap-3">
                   <button
