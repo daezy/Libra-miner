@@ -215,7 +215,7 @@ const Miner = () => {
 
               <div className="flex justify-between items-center mb-4">
                 <div className="">
-                  <p className=" text-[#0D47A1] text-lg mb-1">Staked</p>
+                  <p className=" text-[#0D47A1] text-lg mb-1">Mined</p>
                   <p className="text-slate-800 text-xl">
                     {userData ? userData.totalLocked.toFixed(2) : 0} SOL
                   </p>
@@ -281,7 +281,7 @@ const Miner = () => {
                     disabled={!userData}
                     onClick={handleCompound}
                   >
-                    <p>COMPOUND</p>
+                    <p>RE-MINE</p>
                   </button>
                   <button
                     className={
