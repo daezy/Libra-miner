@@ -14,7 +14,7 @@ const TopBar: FC<{
   return (
     <nav className="">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-        <div className="brand flex items-center justify-between ml-[-20px]">
+        <div className="brand hidden md:flex items-center justify-between ml-[-20px]">
           <img src="./logo.png" width={90} alt="" />
           <h2 className="text-slate-100 tracking-widest self-center md:text-xl font-semibold whitespace-nowrap ml-[-20px] text-lg">
             LIBRA
@@ -40,24 +40,6 @@ const TopBar: FC<{
                   id="myDropdown"
                   className={`dropdown-content ${dropOpen ? "show" : ""}`}
                 >
-                  <a
-                    href="#"
-                    onClick={() => {
-                      setNetwork("testnet");
-                      toggleDropdown();
-                    }}
-                  >
-                    Testnet
-                  </a>
-                  <a
-                    href="#"
-                    onClick={() => {
-                      setNetwork("devnet");
-                      toggleDropdown();
-                    }}
-                  >
-                    Devnet
-                  </a>
                   <a
                     href="#"
                     onClick={() => {

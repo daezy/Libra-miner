@@ -14,6 +14,7 @@ import { INITIALIZER } from "../constants";
 import ErrorPopup from "./ErrorPopup";
 import SuccessPopup from "./SuccessPopup";
 import { BiDiamond } from "react-icons/bi";
+import Loader from "./Loader";
 
 const Miner = () => {
   const [provider, setProvider] = useState<anchor.Provider>();
@@ -26,6 +27,7 @@ const Miner = () => {
   const [success, setSuccess] = useState<string>("");
 
   const [program, setProgram] = useState<anchor.Program>();
+  const [loading, setLoading] = useState<boolean>(false);
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const initializer = new PublicKey(INITIALIZER);
@@ -42,6 +44,20 @@ const Miner = () => {
       setSuccess("");
     }, 3000);
   };
+  const handleLoading = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 30000);
+  };
+
+  const handleMax = () => {
+    if (parseInt(solBalance) > 0.005) {
+      setDepositAmount(parseInt(solBalance) - 0.005);
+    } else {
+      setDepositAmount(0);
+    }
+  };
 
   const confirmTxn = async (signature: string) => {
     const block = await connection.getLatestBlockhash();
@@ -53,7 +69,12 @@ const Miner = () => {
   };
 
   const handleDeposit = async () => {
+    if (depositAmount <= 0 || !depositAmount) {
+      alertError("Enter valid amount");
+      return;
+    }
     if (program && wallet && contractData) {
+      handleLoading();
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
         program.programId
@@ -75,13 +96,17 @@ const Miner = () => {
         .accounts({ ...accounts })
         .rpc()
         .then(confirmTxn);
+
+      setLoading(false);
     } else {
       alertError("Program not initialized...");
+      setLoading(false);
     }
   };
 
   const handleCompound = async () => {
     if (program && wallet && userData) {
+      handleLoading();
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
         program.programId
@@ -100,13 +125,16 @@ const Miner = () => {
         .accounts({ ...compoundAccounts })
         .rpc()
         .then(confirmTxn);
+      setLoading(false);
     } else {
       alertError("No active user account found for program to compound...");
+      setLoading(false);
     }
   };
 
   const handleClaimReward = async () => {
     if (program && wallet && userData) {
+      handleLoading();
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
         program.programId
@@ -127,9 +155,11 @@ const Miner = () => {
         .accounts({ ...claimAccounts })
         .rpc()
         .then(confirmTxn);
+      setLoading(false);
       alertSuccess("Successfully claimed");
     } else {
       alertError("No active user account found for program to claim...");
+      setLoading(false);
     }
   };
 
@@ -174,39 +204,51 @@ const Miner = () => {
     } catch (err) {
       alertError("Error Fetching User Data");
     }
-    const solBalance = await provider?.connection.getBalance(wallet.publicKey);
-    if (solBalance) {
-      setSolBalance((solBalance / LAMPORTS_PER_SOL).toFixed(2));
-    }
+
     await calculateRewards();
   };
 
   useEffect(() => {
-    let providers: anchor.Provider;
+    const init = async () => {
+      let providers: anchor.Provider;
 
-    if (wallet) {
-      try {
-        providers = anchor.getProvider();
-        setProvider(providers);
-        const programId = new PublicKey(idl.metadata.address);
-        const minerProgram = new anchor.Program(idl as anchor.Idl, programId);
-        setProgram(minerProgram);
-        setUp(minerProgram, wallet);
-      } catch {
-        providers = new anchor.AnchorProvider(connection, wallet, {});
-        anchor.setProvider(providers);
-        setProvider(providers);
+      if (wallet) {
+        try {
+          providers = await anchor.getProvider();
+          await setProvider(providers);
+          const programId = new PublicKey(idl.metadata.address);
+          const minerProgram = new anchor.Program(idl as anchor.Idl, programId);
+          await setProgram(minerProgram);
+          await setUp(minerProgram, wallet);
+        } catch {
+          providers = new anchor.AnchorProvider(connection, wallet, {});
+          await anchor.setProvider(providers);
+          await setProvider(providers);
+          const programId = new PublicKey(idl.metadata.address);
+          const minerProgram = new anchor.Program(idl as anchor.Idl, programId);
+          await setProgram(minerProgram);
+          await setUp(minerProgram, wallet);
+        }
+
+        const solBalance = await connection.getBalance(wallet.publicKey);
+        if (solBalance) {
+          await setSolBalance((solBalance / LAMPORTS_PER_SOL).toFixed(2));
+        }
       }
-    }
+    };
+
+    init();
   }, [wallet]);
 
   return (
     <>
       {error && <ErrorPopup message={error} />}
       {success && <SuccessPopup message={success} />}
+      {loading && <Loader />}
+
       <div className="relative">
         <div className="flex flex-col justify-center items-center relative">
-          <div className="md:w-[47%] w-[90%] my-8 ">
+          <div className="md:w-[47%] container my-8 ">
             <div className="bg-white px-4 py-8 w-full rounded-2xl  shadow-lg pb-5">
               {/*<div className="px-2 py-2 flex justify-between ">*/}
               {/*  <p className="font-light text-[#5d5d5d]">Contract</p>*/}
@@ -215,13 +257,13 @@ const Miner = () => {
 
               <div className="flex justify-between items-center mb-4">
                 <div className="">
-                  <p className=" text-[#0D47A1] text-lg mb-1">Mined</p>
+                  <p className=" text-[#0D47A1] text-lg mb-1">Deposited</p>
                   <p className="text-slate-800 text-xl">
                     {userData ? userData.totalLocked.toFixed(2) : 0} SOL
                   </p>
                 </div>
                 <div className="">
-                  <p className=" text-[#0D47A1] text-lg mb-1">Available</p>
+                  <p className=" text-[#0D47A1] text-lg mb-1">SOL Balance</p>
                   <p className="text-slate-800 text-xl">{solBalance} SOL</p>
                 </div>
               </div>
@@ -229,21 +271,37 @@ const Miner = () => {
               <div className="flex items-center my-3 gap-3">
                 <p className="text-lg">Projected Yield</p>
                 <p className="text-[#0D47A1] p-1 bg-blue-200 rounded-xl text-sm">
-                  APY {(contractData ? (contractData.apy as unknown as anchor.BN).toNumber() : 0)/100}%
+                  APY{" "}
+                  {(contractData
+                    ? (contractData.apy as unknown as anchor.BN).toNumber()
+                    : 0) / 100}
+                  %
                 </p>
               </div>
 
               <div className="pb-3">
-                <div className="px-2 py-2 mt-2  border ">
-                  <input
-                    type="number"
-                    placeholder="0.0 SOL"
-                    className="outline-none placeholder-[#0D47A1] placeholder-custom w-full placeholder-text-right"
-                    onChange={(e) =>
-                      setDepositAmount(parseFloat(e.target.value))
-                    }
-                  />
+                <div className="flex items-center gap-2 mt-2">
+                  <div className=" border w-[75%] md:w-[85%]">
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="0.0 SOL"
+                      value={depositAmount}
+                      className="outline-none placeholder-[#0D47A1] placeholder-custom w-full p-2 placeholder-text-right"
+                      onChange={(e) =>
+                        setDepositAmount(parseFloat(e.target.value))
+                      }
+                    />
+                  </div>
+
+                  <button
+                    className="border p-2 w-[25%] md:w-[15%]"
+                    onClick={handleMax}
+                  >
+                    MAX
+                  </button>
                 </div>
+
                 <div>
                   <button
                     className={
@@ -268,9 +326,12 @@ const Miner = () => {
             <div className="bg-white px-4 py-8 w-full rounded-2xl  shadow-lg pb-5 mt-4">
               <div className="">
                 <div className="px-2 py-2 flex justify-between">
-                  <p className="text-[#0D47A1] text-lg mb-1">Your Rewards</p>
+                  <p className="text-[#0D47A1] text-lg mb-1">SOL Mined</p>
                   <p className="text-slate-800 text-xl">{currentReward} SOL</p>
                 </div>
+                <p className="text-slate-500 text-right mb-3">
+                  Updates after every 24hrs
+                </p>
                 <div className="flex justify-between gap-3">
                   <button
                     className={
