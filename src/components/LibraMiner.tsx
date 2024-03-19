@@ -260,7 +260,7 @@ const Miner = () => {
               </div>
 
               <p className="flex items-center gap-2 justify-center my-2">
-                <BiDiamond className="text-[#0D47A1] text-lg" /> Stake SOL and
+                <BiDiamond className="text-[#0D47A1] text-lg" /> Mine SOL and
                 earn rewards
               </p>
             </div>
