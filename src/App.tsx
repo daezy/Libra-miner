@@ -6,7 +6,7 @@ import TopBar from "./components/TopBar";
 
 function App() {
   const [network, setNetwork] = useState<"devnet" | "mainnet-beta" | "testnet">(
-    "devnet"
+    "mainnet-beta"
   );
   return (
     <>

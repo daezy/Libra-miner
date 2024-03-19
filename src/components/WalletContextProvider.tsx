@@ -12,7 +12,7 @@ const WalletContextProvider: FC<{
   children: ReactNode;
   network: "devnet" | "mainnet-beta" | "testnet";
 }> = ({ children, network }) => {
-  const endpoint = web3.clusterApiUrl(network);
+  const endpoint = "https://solana-mainnet.g.alchemy.com/v2/mSSt0hYTZTKiDCQwz8TLgt7duMQLueDZ";
   const wallets = useMemo(() => {
     return [
       new walletAdapterWallets.PhantomWalletAdapter(),
