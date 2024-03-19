@@ -1,1 +1,1 @@
-export const INITIALIZER = "FVHN3NdiUvfdzWRGji9uFzGALqSy7u2qF2zcwZcRTgmV"
+export const INITIALIZER = "8LkY6BDMrQKuqrJL5iR18Z6dmUKs45fFMtq8PbBUVZGj";

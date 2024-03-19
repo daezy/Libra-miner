@@ -193,6 +193,53 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "updateMine",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mineAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeCollector",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "apy",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "devFee",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "claimInterval",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "earlyClaimPenalty",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
     }
   ],
   "accounts": [

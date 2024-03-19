@@ -229,7 +229,7 @@ const Miner = () => {
               <div className="flex items-center my-3 gap-3">
                 <p className="text-lg">Projected Yield</p>
                 <p className="text-[#0D47A1] p-1 bg-blue-200 rounded-xl text-sm">
-                  APY 2500%
+                  APY {(contractData ? (contractData.apy as unknown as anchor.BN).toNumber() : 0)/100}%
                 </p>
               </div>
 
