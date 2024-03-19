@@ -259,7 +259,8 @@ const Miner = () => {
                 <div className="">
                   <p className=" text-[#0D47A1] text-lg mb-1">Deposited</p>
                   <p className="text-slate-800 text-xl">
-                    {userData ? userData.totalLocked.toFixed(2) : 0} SOL
+                    {userData ? (userData.totalLocked / 0.98).toFixed(2) : 0}{" "}
+                    SOL
                   </p>
                 </div>
                 <div className="">
@@ -313,6 +314,12 @@ const Miner = () => {
                     onClick={handleDeposit}
                   >
                     <p>DEPOSIT SOL</p>
+                  </button>
+                  <hr className="my-3" />
+                  <button
+                    className={`w-full p-2 bg-[#0D47A1] rounded-md cursor-pointer text-white`}
+                  >
+                    <p>WITHDRAW SOL</p>
                   </button>
                 </div>
               </div>
