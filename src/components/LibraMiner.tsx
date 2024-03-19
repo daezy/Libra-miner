@@ -163,6 +163,40 @@ const Miner = () => {
     }
   };
 
+  const handleWithdrawal = async () => {
+    handleLoading();
+    if (program && wallet && contractData && userData) {
+      const [minerAccount, ] = PublicKey.findProgramAddressSync(
+        [Buffer.from("miner"), wallet.publicKey.toBuffer()], 
+        program.programId
+      );
+      const [mineAccount] = PublicKey.findProgramAddressSync(
+        [Buffer.from("mine"), initializer.toBuffer()],
+        program.programId
+      );
+      const withdrawAccounts = {
+        miner: wallet.publicKey,
+        minerAccount,
+        mineAccount,
+        vault: contractData.vault,
+        feeCollector: contractData.feeCollector,
+        systemProgram: SystemProgram.programId
+      }
+      try {
+        await program.methods.withdraw()
+        .accounts({ ...withdrawAccounts })
+        .rpc()
+        .then(confirmTxn);
+      } catch (e) {
+        console.log(e);
+        alertError("An Error Occured ❌❌❌")
+      }
+    } else {
+      alertError("No active user account found for program to withdraw from...");
+    }
+    setLoading(false);
+  }
+
   const calculateRewards = async () => {
     if (userData && contractData) {
       const apy = (contractData.apy as unknown as anchor.BN).toNumber();
@@ -317,7 +351,13 @@ const Miner = () => {
                   </button>
                   <hr className="my-3" />
                   <button
-                    className={`w-full p-2 bg-[#0D47A1] rounded-md cursor-pointer text-white`}
+                    className={
+                      userData == undefined
+                        ? `w-full p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
+                        : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
+                    }
+                    disabled={userData == undefined}
+                    onClick={handleWithdrawal}
                   >
                     <p>WITHDRAW SOL</p>
                   </button>
