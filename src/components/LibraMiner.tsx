@@ -209,8 +209,10 @@ const Miner = () => {
       const totalReward =
         (userData.totalLocked * apy * interval) / (10000 * 31536000);
       const expectedReward = ((10000 - devFee) * totalReward) / 10000;
-      setCurrentReward(expectedReward.toFixed(4));
+      setCurrentReward(expectedReward.toFixed(7));
     }
+
+    console.log("reaches");
   };
 
   const setUp = async (program: anchor.Program, wallet: AnchorWallet) => {

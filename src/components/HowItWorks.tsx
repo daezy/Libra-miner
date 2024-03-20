@@ -19,23 +19,33 @@ const HowItWorks = () => {
         }`}
       >
         <p className="text-[#032E70] text-sm">
-          - You initiate your mining journey by depositing their Solana (SOL)
-          tokens into the Libra Miner app. Once deposited, the mining process
-          begins automatically, enabling users to earn Solana rewards at a fixed
-          Annual Percentage Yield (APY) of 2,120%.
+          - Deposit and Start Mining: Miners deposit their Solana into the Libra
+          Miner app to kickstart the mining process. As soon as the deposit is
+          made, mining begins automatically, allowing miners to earn Solana
+          rewards at a fixed APY of 2,120%.
         </p>
         <br />
         <p className="text-[#032E70] text-sm">
-          - You have the option to re-mine their earned rewards directly within
-          the Solana mining pool. This feature allows for continuous compounding
-          of earnings, maximizing the potential for long-term wealth
-          accumulation.
+          - Fixed APY and Dynamic Rewards: Enjoy a fixed APY of 2,120% on your
+          mining deposits. However, please note that this APY is subject to
+          change based on the volume of activity on the Libra Miner platform.
+          The more activity, the higher the potential rewards.
         </p>
         <br />
         <p className="text-[#032E70] text-sm">
-          - You can only withdraw profit once every 7 days, Attempting to
-          withdraw profit more frequently may result in a percentage of the
-          reward being returned to the pool.
+          - Reinvestment Option: Miners have the option to reinvest their earned
+          Solana back into the mining pool, compounding their returns and
+          maximizing their mining potential. Reinvesting allows miners to
+          accelerate their earnings and capitalize on the growing opportunities
+          within the mining ecosystem.
+        </p>
+        <br />
+        <p className="text-[#032E70] text-sm">
+          - Withdrawal Penalties: Miners must wait for a minimum of 7 days
+          before withdrawing their initial deposit from the Libra Miner
+          platform. Attempting to withdraw before the 7-day period will result
+          in a penalty, ensuring that miners commit to the mining process and
+          contribute to the stability of the platform.
         </p>
       </div>
     </div>
