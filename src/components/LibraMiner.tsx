@@ -75,6 +75,7 @@ const Miner = () => {
       return;
     }
     if (program && wallet && contractData) {
+      console.log(`Deposit Amount: ${depositAmount}`)
       handleLoading();
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
@@ -205,7 +206,7 @@ const Miner = () => {
     if (userData && contractData) {
       const apy = (contractData.apy as unknown as anchor.BN).toNumber();
       const devFee = (contractData.devFee as unknown as anchor.BN).toNumber();
-      const interval = Date.now() / 1000 - userData.depositTs;
+      const interval = (Date.now() / 1000) - userData.depositTs;
       const totalReward =
         (userData.totalLocked * apy * interval) / (10000 * 31536000);
       const expectedReward = ((10000 - devFee) * totalReward) / 10000;
@@ -244,7 +245,6 @@ const Miner = () => {
     } catch (err) {
       alertError("Error Fetching User Data");
     }
-
     await calculateRewards();
   };
 
