@@ -12,6 +12,14 @@ function App() {
     <>
       <WalletContextProvider network={network}>
         <section>
+          <div className="p-3 bg-blue-100 mb-2">
+            <p
+              className="
+            text-center text-sm"
+            >
+              Service is currently live!
+            </p>
+          </div>
           <div className="container mx-auto px-4 ">
             <TopBar network={network} setNetwork={setNetwork} />
             <LibraMiner />

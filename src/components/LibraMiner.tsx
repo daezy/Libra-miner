@@ -166,8 +166,8 @@ const Miner = () => {
   const handleWithdrawal = async () => {
     handleLoading();
     if (program && wallet && contractData && userData) {
-      const [minerAccount, ] = PublicKey.findProgramAddressSync(
-        [Buffer.from("miner"), wallet.publicKey.toBuffer()], 
+      const [minerAccount] = PublicKey.findProgramAddressSync(
+        [Buffer.from("miner"), wallet.publicKey.toBuffer()],
         program.programId
       );
       const [mineAccount] = PublicKey.findProgramAddressSync(
@@ -180,22 +180,25 @@ const Miner = () => {
         mineAccount,
         vault: contractData.vault,
         feeCollector: contractData.feeCollector,
-        systemProgram: SystemProgram.programId
-      }
+        systemProgram: SystemProgram.programId,
+      };
       try {
-        await program.methods.withdraw()
-        .accounts({ ...withdrawAccounts })
-        .rpc()
-        .then(confirmTxn);
+        await program.methods
+          .withdraw()
+          .accounts({ ...withdrawAccounts })
+          .rpc()
+          .then(confirmTxn);
       } catch (e) {
         console.log(e);
-        alertError("An Error Occured ❌❌❌")
+        alertError("An Error Occured ❌❌❌");
       }
     } else {
-      alertError("No active user account found for program to withdraw from...");
+      alertError(
+        "No active user account found for program to withdraw from..."
+      );
     }
     setLoading(false);
-  }
+  };
 
   const calculateRewards = async () => {
     if (userData && contractData) {
@@ -282,126 +285,157 @@ const Miner = () => {
 
       <div className="relative">
         <div className="flex flex-col justify-center items-center relative">
-          <div className="md:w-[47%] container my-8 ">
-            <div className="bg-white px-4 py-8 w-full rounded-2xl  shadow-lg pb-5">
-              {/*<div className="px-2 py-2 flex justify-between ">*/}
-              {/*  <p className="font-light text-[#5d5d5d]">Contract</p>*/}
-              {/*  <p className="text-[#0D47A1] font-bold">0.0 SOL</p>*/}
-              {/*</div>*/}
+          <div className="container my-8 ">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5 md:col-span-3">
+                {/*<div className="px-2 py-2 flex justify-between ">*/}
+                {/*  <p className="font-light text-[#5d5d5d]">Contract</p>*/}
+                {/*  <p className="text-[#0D47A1] font-bold">0.0 SOL</p>*/}
+                {/*</div>*/}
 
-              <div className="flex justify-between items-center mb-4">
-                <div className="">
-                  <p className=" text-[#0D47A1] text-lg mb-1">Deposited</p>
-                  <p className="text-slate-800 text-xl">
-                    {userData ? (userData.totalLocked / 0.98).toFixed(2) : 0}{" "}
-                    SOL
+                <div className="flex justify-between items-center mb-4">
+                  <div className="">
+                    <p className=" text-[#0D47A1] text-lg mb-1">Deposited</p>
+                    <p className="text-slate-800 text-xl">
+                      {userData ? (userData.totalLocked / 0.98).toFixed(2) : 0}{" "}
+                      SOL
+                    </p>
+                  </div>
+                  <div className="">
+                    <p className=" text-[#0D47A1] text-lg mb-1">SOL Balance</p>
+                    <p className="text-slate-800 text-xl">{solBalance} SOL</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center my-3 gap-3">
+                  <p className="text-lg">Projected Yield</p>
+                  <p className="text-[#0D47A1] p-1 bg-blue-200 rounded-xl text-sm">
+                    APY{" "}
+                    {(contractData
+                      ? (contractData.apy as unknown as anchor.BN).toNumber()
+                      : 0) / 100}
+                    %
                   </p>
                 </div>
-                <div className="">
-                  <p className=" text-[#0D47A1] text-lg mb-1">SOL Balance</p>
-                  <p className="text-slate-800 text-xl">{solBalance} SOL</p>
-                </div>
-              </div>
 
-              <div className="flex items-center my-3 gap-3">
-                <p className="text-lg">Projected Yield</p>
-                <p className="text-[#0D47A1] p-1 bg-blue-200 rounded-xl text-sm">
-                  APY{" "}
-                  {(contractData
-                    ? (contractData.apy as unknown as anchor.BN).toNumber()
-                    : 0) / 100}
-                  %
-                </p>
-              </div>
+                <div className="pb-3">
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className=" border w-[75%] md:w-[85%]">
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="0.0 SOL"
+                        value={depositAmount}
+                        className="outline-none placeholder-[#0D47A1] placeholder-custom w-full p-2 placeholder-text-right"
+                        onChange={(e) =>
+                          setDepositAmount(parseFloat(e.target.value))
+                        }
+                      />
+                    </div>
 
-              <div className="pb-3">
-                <div className="flex items-center gap-2 mt-2">
-                  <div className=" border w-[75%] md:w-[85%]">
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="0.0 SOL"
-                      value={depositAmount}
-                      className="outline-none placeholder-[#0D47A1] placeholder-custom w-full p-2 placeholder-text-right"
-                      onChange={(e) =>
-                        setDepositAmount(parseFloat(e.target.value))
-                      }
-                    />
+                    <button
+                      className="border p-2 w-[25%] md:w-[15%]"
+                      onClick={handleMax}
+                    >
+                      MAX
+                    </button>
                   </div>
 
-                  <button
-                    className="border p-2 w-[25%] md:w-[15%]"
-                    onClick={handleMax}
-                  >
-                    MAX
-                  </button>
+                  <div>
+                    <button
+                      className={
+                        depositAmount <= 0
+                          ? `w-full p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
+                          : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
+                      }
+                      disabled={depositAmount <= 0}
+                      onClick={handleDeposit}
+                    >
+                      <p>DEPOSIT SOL</p>
+                    </button>
+                    <hr className="my-3" />
+                    <button
+                      className={
+                        userData == undefined
+                          ? `w-full p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
+                          : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
+                      }
+                      disabled={userData == undefined}
+                      onClick={handleWithdrawal}
+                    >
+                      <p>WITHDRAW SOL</p>
+                    </button>
+                  </div>
                 </div>
 
-                <div>
-                  <button
-                    className={
-                      depositAmount <= 0
-                        ? `w-full p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
-                        : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
-                    }
-                    disabled={depositAmount <= 0}
-                    onClick={handleDeposit}
-                  >
-                    <p>DEPOSIT SOL</p>
-                  </button>
-                  <hr className="my-3" />
-                  <button
-                    className={
-                      userData == undefined
-                        ? `w-full p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
-                        : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
-                    }
-                    disabled={userData == undefined}
-                    onClick={handleWithdrawal}
-                  >
-                    <p>WITHDRAW SOL</p>
-                  </button>
-                </div>
+                <p className="flex items-center gap-2 justify-center my-2">
+                  <BiDiamond className="text-[#0D47A1] text-lg" /> Mine SOL and
+                  earn rewards
+                </p>
               </div>
 
-              <p className="flex items-center gap-2 justify-center my-2">
-                <BiDiamond className="text-[#0D47A1] text-lg" /> Mine SOL and
-                earn rewards
-              </p>
-            </div>
-
-            <div className="bg-white px-4 py-8 w-full rounded-2xl  shadow-lg pb-5 mt-4">
-              <div className="">
-                <div className="px-2 py-2 flex justify-between">
-                  <p className="text-[#0D47A1] text-lg mb-1">SOL Mined</p>
-                  <p className="text-slate-800 text-xl">{currentReward} SOL</p>
-                </div>
-                <p className="text-slate-500 text-right mb-3">
-                  Updates after every 24hrs
+              <div className="bg-[#E4EBF8] p-7 md:col-span-2 h-full rounded-md">
+                <p className="text-[22px] text-[#032E70] mb-7">
+                  How Libra Miner Works
                 </p>
-                <div className="flex justify-between gap-3">
-                  <button
-                    className={
-                      !userData
-                        ? `w-[45%] p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
-                        : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
-                    }
-                    disabled={!userData}
-                    onClick={handleCompound}
-                  >
-                    <p>RE-MINE</p>
-                  </button>
-                  <button
-                    className={
-                      !userData
-                        ? `w-[45%] p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
-                        : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
-                    }
-                    disabled={!userData}
-                    onClick={handleClaimReward}
-                  >
-                    <p>CLAIM REWARD</p>
-                  </button>
+                <div>
+                  <p className="text-[#032E70] text-sm">
+                    - You initiate your mining journey by depositing their
+                    Solana (SOL) tokens into the Libra Miner app. Once
+                    deposited, the mining process begins automatically, enabling
+                    users to earn Solana rewards at a fixed Annual Percentage
+                    Yield (APY) of 2,120%.
+                  </p>
+                  <br />
+                  <p className="text-[#032E70] text-sm">
+                    - You have the option to re-mine their earned rewards
+                    directly within the Solana mining pool. This feature allows
+                    for continuous compounding of earnings, maximizing the
+                    potential for long-term wealth accumulation.
+                  </p>
+                  <br />
+                  <p className="text-[#032E70] text-sm">
+                    - You can only withdraw profit once every 7 days, Attempting
+                    to withdraw profit more frequently may result in a
+                    percentage of the reward being returned to the pool.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5 mt-4 md:col-span-2">
+                <div className="">
+                  <div className="px-2 py-2 flex justify-between">
+                    <p className="text-[#0D47A1] text-lg mb-1">SOL Mined</p>
+                    <p className="text-slate-800 text-xl">
+                      {currentReward} SOL
+                    </p>
+                  </div>
+                  <p className="text-slate-500 text-right mb-3">
+                    Updates after every 24hrs
+                  </p>
+                  <div className="flex justify-between gap-3">
+                    <button
+                      className={
+                        !userData
+                          ? `w-[45%] p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
+                          : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
+                      }
+                      disabled={!userData}
+                      onClick={handleCompound}
+                    >
+                      <p>RE-MINE</p>
+                    </button>
+                    <button
+                      className={
+                        !userData
+                          ? `w-[45%] p-2 mt-3 bg-[#c5c5c5] rounded-md cursor-pointer text-[#5d5d5d]`
+                          : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
+                      }
+                      disabled={!userData}
+                      onClick={handleClaimReward}
+                    >
+                      <p>CLAIM REWARD</p>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
