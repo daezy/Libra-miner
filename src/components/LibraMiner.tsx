@@ -248,7 +248,6 @@ const Miner = () => {
 
   useEffect(() => {
     const init = async () => {
-      console.log(await calculateRewards())
       let providers: anchor.Provider;
 
       if (wallet) {
