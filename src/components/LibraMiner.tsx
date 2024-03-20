@@ -15,6 +15,7 @@ import ErrorPopup from "./ErrorPopup";
 import SuccessPopup from "./SuccessPopup";
 import { BiDiamond } from "react-icons/bi";
 import Loader from "./Loader";
+import HowItWorks from "./HowItWorks";
 
 const Miner = () => {
   const [provider, setProvider] = useState<anchor.Provider>();
@@ -285,9 +286,9 @@ const Miner = () => {
 
       <div className="relative">
         <div className="flex flex-col justify-center items-center relative">
-          <div className="container my-8 ">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5 md:col-span-3">
+          <div className="md:w-[47%] container my-8 ">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5">
                 {/*<div className="px-2 py-2 flex justify-between ">*/}
                 {/*  <p className="font-light text-[#5d5d5d]">Contract</p>*/}
                 {/*  <p className="text-[#0D47A1] font-bold">0.0 SOL</p>*/}
@@ -374,34 +375,8 @@ const Miner = () => {
                 </p>
               </div>
 
-              <div className="bg-[#E4EBF8] p-7 md:col-span-2 h-full rounded-md">
-                <p className="text-[22px] text-[#032E70] mb-7">
-                  How Libra Miner Works
-                </p>
-                <div>
-                  <p className="text-[#032E70] text-sm">
-                    - You initiate your mining journey by depositing their
-                    Solana (SOL) tokens into the Libra Miner app. Once
-                    deposited, the mining process begins automatically, enabling
-                    users to earn Solana rewards at a fixed Annual Percentage
-                    Yield (APY) of 2,120%.
-                  </p>
-                  <br />
-                  <p className="text-[#032E70] text-sm">
-                    - You have the option to re-mine their earned rewards
-                    directly within the Solana mining pool. This feature allows
-                    for continuous compounding of earnings, maximizing the
-                    potential for long-term wealth accumulation.
-                  </p>
-                  <br />
-                  <p className="text-[#032E70] text-sm">
-                    - You can only withdraw profit once every 7 days, Attempting
-                    to withdraw profit more frequently may result in a
-                    percentage of the reward being returned to the pool.
-                  </p>
-                </div>
-              </div>
-              <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5 mt-4 md:col-span-2">
+              <HowItWorks />
+              <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5">
                 <div className="">
                   <div className="px-2 py-2 flex justify-between">
                     <p className="text-[#0D47A1] text-lg mb-1">SOL Mined</p>

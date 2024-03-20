@@ -3,6 +3,7 @@ import "./App.css";
 import LibraMiner from "./components/LibraMiner";
 import WalletContextProvider from "./components/WalletContextProvider";
 import TopBar from "./components/TopBar";
+import Footer from "./components/Footer";
 
 function App() {
   const [network, setNetwork] = useState<"devnet" | "mainnet-beta" | "testnet">(
@@ -25,6 +26,7 @@ function App() {
             <LibraMiner />
           </div>
         </section>
+        <Footer />
       </WalletContextProvider>
     </>
   );
