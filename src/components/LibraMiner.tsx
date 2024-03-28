@@ -16,6 +16,9 @@ import SuccessPopup from "./SuccessPopup";
 import { BiDiamond } from "react-icons/bi";
 import Loader from "./Loader";
 import HowItWorks from "./HowItWorks";
+import { Link, useLocation } from "react-router-dom";
+import Referral from "./Referral";
+import { useParams } from "react-router-dom";
 
 const Miner = () => {
   const [provider, setProvider] = useState<anchor.Provider>();
@@ -29,6 +32,8 @@ const Miner = () => {
 
   const [program, setProgram] = useState<anchor.Program>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [refAddress, setRefAddress] = useState<string>("");
+  const location = useLocation();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const initializer = new PublicKey(INITIALIZER);
@@ -50,6 +55,10 @@ const Miner = () => {
     setTimeout(() => {
       setLoading(false);
     }, 30000);
+  };
+
+  const handleReferralAddress = (address: string) => {
+    setRefAddress(address);
   };
 
   const handleMax = () => {
@@ -75,7 +84,7 @@ const Miner = () => {
       return;
     }
     if (program && wallet && contractData) {
-      console.log(`Deposit Amount: ${depositAmount}`)
+      console.log(`Deposit Amount: ${depositAmount}`);
       handleLoading();
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
@@ -206,14 +215,13 @@ const Miner = () => {
     if (userData && contractData) {
       const apy = (contractData.apy as unknown as anchor.BN).toNumber();
       const devFee = (contractData.devFee as unknown as anchor.BN).toNumber();
-      const interval = (Date.now() / 1000) - userData.depositTs;
+      const interval = Date.now() / 1000 - userData.depositTs;
       const totalReward =
         (userData.totalLocked * apy * interval) / (10000 * 31536000);
+
       const expectedReward = ((10000 - devFee) * totalReward) / 10000;
       setCurrentReward(expectedReward.toFixed(7));
     }
-
-    console.log("reaches");
   };
 
   const setUp = async (program: anchor.Program, wallet: AnchorWallet) => {
@@ -279,6 +287,18 @@ const Miner = () => {
 
     init();
   }, [wallet]);
+
+  useEffect(() => {
+    if (location.search) {
+      setRefAddress(String(new URLSearchParams(location.search).get("ref")));
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => calculateRewards(), 2000);
+
+    return () => clearInterval(interval);
+  });
 
   return (
     <>
@@ -415,9 +435,23 @@ const Miner = () => {
                   </div>
                 </div>
               </div>
+
+              <Referral
+                address={wallet?.publicKey.toBase58()}
+                referred={false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
+                referrer={refAddress}
+                setReferrer={handleReferralAddress}
+              />
             </div>
           </div>
         </div>
+        {wallet?.publicKey.toBase58() ==
+          "GubeRYFQHMMYDkNFgmXoB8EzD8LF78HuG2aLGLkrc4ht  " && (
+          <div className="text-center text-white text-lg">
+            <Link to="/miner/admin">Open Admin Page</Link>
+          </div>
+        )}
+
         {/* <div className="absolute md:top-[54px] top-[15px] md:right-4 right-2 md:mt-0 mt-5">
           {/* <button className="">
             <p className="text-white md:text-[15px] text-[10px]">CONNECT</p>

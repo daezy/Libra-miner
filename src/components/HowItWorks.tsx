@@ -14,7 +14,7 @@ const HowItWorks = () => {
         {open ? <FaCaretUp /> : <FaCaretDown />}
       </div>
       <div
-        className={`transition-all ease-in-out duration-300 px-4 ${
+        className={`transition-all ease-in-out duration-500 px-4 ${
           open ? "h-full py-3" : "h-0"
         }`}
       >
