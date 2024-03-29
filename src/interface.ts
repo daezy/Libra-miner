@@ -12,6 +12,7 @@ export interface ContractData {
 }
 
 export interface UserData {
+    address: PublicKey,
     totalLocked: number,
     depositTs: number
 }

@@ -63,6 +63,12 @@
           "isSigner": false
         },
         {
+          "name": "referrer",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
           "name": "mineAccount",
           "isMut": true,
           "isSigner": false

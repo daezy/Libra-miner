@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 //import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 //import WalletContextProvider from "./WalletContextProvider";
 import * as anchor from "@project-serum/anchor";
@@ -18,8 +18,6 @@ import Loader from "./Loader";
 import HowItWorks from "./HowItWorks";
 import { Link, useLocation } from "react-router-dom";
 import Referral from "./Referral";
-import { Timer } from "./Timer";
-import { set } from "@project-serum/anchor/dist/cjs/utils/features";
 
 const Miner = () => {
   const [provider, setProvider] = useState<anchor.Provider>();
@@ -113,10 +111,12 @@ const Miner = () => {
         [Buffer.from("mine"), initializer.toBuffer()],
         program.programId
       );
+      const referrer = refAddress ? new PublicKey(refAddress) : null;
       const accounts = {
         depositor: wallet.publicKey,
         minerAccount,
         mineAccount,
+        referrer: referrer,
         vault: contractData.vault,
         feeCollector: contractData.feeCollector,
         systemProgram: SystemProgram.programId,
@@ -290,6 +290,7 @@ const Miner = () => {
       const userData = await program?.account.minerInfo.fetch(minerAccount);
       if (userData) {
         setUserData({
+          address: minerAccount,
           totalLocked:
             (userData.totalLocked as unknown as anchor.BN).toNumber() /
             LAMPORTS_PER_SOL,
@@ -499,14 +500,12 @@ const Miner = () => {
                 )}
               </div>
 
-              {wallet?.publicKey && (
-                <Referral
-                  address={wallet?.publicKey.toBase58()}
-                  referred={false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
-                  referrer={refAddress}
-                  setReferrer={handleReferralAddress}
-                />
-              )}
+              <Referral
+                address={wallet?.publicKey.toBase58()}
+                referred={false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
+                referrer={refAddress}
+                setReferrer={handleReferralAddress}
+              />
             </div>
           </div>
         </div>
