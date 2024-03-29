@@ -502,8 +502,8 @@ const Miner = () => {
               </div>
 
               <Referral
-                address={wallet?.publicKey.toBase58()}
-                referred={false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
+                address={userData ? userData.address.toString() : ""}
+                referred={userData ? true : false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
                 referrer={refAddress}
                 setReferrer={handleReferralAddress}
               />
