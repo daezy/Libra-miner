@@ -18,7 +18,8 @@ import Loader from "./Loader";
 import HowItWorks from "./HowItWorks";
 import { Link, useLocation } from "react-router-dom";
 import Referral from "./Referral";
-import { useParams } from "react-router-dom";
+import { Timer } from "./Timer";
+import { set } from "@project-serum/anchor/dist/cjs/utils/features";
 
 const Miner = () => {
   const [provider, setProvider] = useState<anchor.Provider>();
@@ -59,6 +60,24 @@ const Miner = () => {
 
   const handleReferralAddress = (address: string) => {
     setRefAddress(address);
+  };
+  const getTimerDate = (): string => {
+    const date = userData
+      ? getUnlockDate(parseInt("7"))
+      : new Date().toUTCString();
+
+    return date;
+  };
+  const getUnlockDate = (days: number): string => {
+    const dayOfStake = userData
+      ? parseInt(userData?.depositTs.toString()) * 1000
+      : 0;
+    const dateOfStamp = new Date(dayOfStake);
+    const result = dateOfStamp.setDate(dateOfStamp.getDate() + days);
+    const newDate = new Date(result);
+    const result2 = newDate.setTime(newDate.getTime() + 1 * 60 * 60 * 1000);
+    const newDate2 = new Date(result2);
+    return newDate2.toUTCString();
   };
 
   const handleMax = () => {
@@ -176,6 +195,34 @@ const Miner = () => {
 
   const handleWithdrawal = async () => {
     handleLoading();
+
+    if (userData) {
+      const dayOfStake = userData?.depositTs * 1000;
+      // console.log(dayOfStake);
+      if (dayOfStake != null || dayOfStake != undefined) {
+        const dateOfStamp = new Date(dayOfStake);
+        // console.log(dateOfStamp.toDateString());
+        const newDate = new Date();
+        console.log(dateOfStamp);
+
+        const timeDiff = newDate.getTime() - dateOfStamp.getTime();
+        const dayDiff = timeDiff / (1000 * 3600 * 24);
+        // console.log(Math.floor(dayDiff));
+
+        const cooldown = 7;
+        console.log(cooldown);
+        console.log(dayDiff);
+        if (Math.floor(dayDiff) < cooldown) {
+          alertError(
+            `${cooldown - Math.floor(dayDiff)} days left to withdrawal`
+          );
+
+          setLoading(false);
+          return;
+        }
+      }
+    }
+
     if (program && wallet && contractData && userData) {
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
@@ -218,7 +265,6 @@ const Miner = () => {
       const interval = Date.now() / 1000 - userData.depositTs;
       const totalReward =
         (userData.totalLocked * apy * interval) / (10000 * 31536000);
-
       const expectedReward = ((10000 - devFee) * totalReward) / 10000;
       setCurrentReward(expectedReward.toFixed(7));
     }
@@ -434,14 +480,33 @@ const Miner = () => {
                     </button>
                   </div>
                 </div>
+                {userData && (
+                  <div className="my-4">
+                    <div>
+                      <p className="text-[#032E70] py-2">
+                        Next Capital Withdrawal Time
+                      </p>
+                      <p className="text-[#7F9ECF] text-[12px] pb-2">
+                        countdown to withdrawal:
+                      </p>
+                      <Timer
+                        deadline={
+                          userData ? getTimerDate() : new Date().toUTCString()
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <Referral
-                address={wallet?.publicKey.toBase58()}
-                referred={false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
-                referrer={refAddress}
-                setReferrer={handleReferralAddress}
-              />
+              {wallet?.publicKey && (
+                <Referral
+                  address={wallet?.publicKey.toBase58()}
+                  referred={false} // set true based on whether user data exists or not or if the referrer address field in userdata exists depending on how its going to work
+                  referrer={refAddress}
+                  setReferrer={handleReferralAddress}
+                />
+              )}
             </div>
           </div>
         </div>
