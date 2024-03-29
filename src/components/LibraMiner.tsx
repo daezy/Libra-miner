@@ -18,6 +18,7 @@ import Loader from "./Loader";
 import HowItWorks from "./HowItWorks";
 import { Link, useLocation } from "react-router-dom";
 import Referral from "./Referral";
+import { Timer } from "./Timer";
 
 const Miner = () => {
   const [provider, setProvider] = useState<anchor.Provider>();
@@ -367,7 +368,7 @@ const Miner = () => {
                   <div className="">
                     <p className=" text-[#0D47A1] text-lg mb-1">Deposited</p>
                     <p className="text-slate-800 text-xl">
-                      {userData ? (userData.totalLocked / 0.98).toFixed(2) : 0}{" "}
+                      {userData ? (userData.totalLocked / 0.98).toFixed(4) : 0}{" "}
                       SOL
                     </p>
                   </div>

@@ -8,7 +8,7 @@ const Referral: React.FC<{
 }> = (props) => {
   const [copyText, setCopyText] = useState<string>("Copy");
 
-  const referralLink = `http://localhost:5173?ref=${props.address ? props.address : ""}`;
+  const referralLink = `https://miner.libra-finance.app?ref=${props.address ? props.address : ""}`;
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
