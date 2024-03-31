@@ -33,6 +33,7 @@ const Miner = () => {
   const [program, setProgram] = useState<anchor.Program>();
   const [loading, setLoading] = useState<boolean>(false);
   const [refAddress, setRefAddress] = useState<string>("");
+  const [priority, setPriority] = useState<"high" | "low" | "medium">("high");
   const location = useLocation();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
@@ -268,6 +269,18 @@ const Miner = () => {
         (userData.totalLocked * apy * interval) / (10000 * 31536000);
       const expectedReward = ((10000 - devFee) * totalReward) / 10000;
       setCurrentReward(expectedReward.toFixed(7));
+
+      // const dayOfStake = userData.depositTs * 1000;
+      // const dateOfStamp = new Date(dayOfStake);
+      // // const todayDate = new Date();
+      // // const result = todayDate.setDate(todayDate.getDate() + 14);
+      // const newDate = new Date();
+      // const timeDiff = newDate.getTime() - dateOfStamp.getTime();
+      // const dayDiff = timeDiff / (1000 * 3600 * 24);
+
+      // console.log(devFee);
+      // const rewards = userData.totalLocked * (dayDiff / 365) * (apy / 10000);
+      // console.log(rewards * ((10000 - devFee) / 10000));
     }
   };
 
@@ -437,6 +450,31 @@ const Miner = () => {
                       <p>WITHDRAW SOL</p>
                     </button>
                   </div>
+
+                  <div className="my-4">
+                    <h2>Priority Fees</h2>
+
+                    <div className="flex flex-wrap gap-3 mt-4 ">
+                      <button
+                        className={`${priority == "low" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
+                        onClick={() => setPriority("low")}
+                      >
+                        <p>Low (1 SOL)</p>
+                      </button>
+                      <button
+                        className={`${priority == "medium" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
+                        onClick={() => setPriority("medium")}
+                      >
+                        <p>Medium (2 SOL)</p>
+                      </button>
+                      <button
+                        className={`${priority == "high" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
+                        onClick={() => setPriority("high")}
+                      >
+                        <p>High (3 SOL)</p>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <p className="flex items-center gap-2 justify-center my-2">
@@ -455,7 +493,7 @@ const Miner = () => {
                     </p>
                   </div>
                   <p className="text-slate-500 text-right mb-3">
-                    Updates after every 24hrs
+                    Note: Claiming more than once in a week cuts down your ROI
                   </p>
                   <div className="flex justify-between gap-3">
                     <button
