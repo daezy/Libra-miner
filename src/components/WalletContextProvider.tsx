@@ -11,8 +11,9 @@ const WalletContextProvider: FC<{
   children: ReactNode;
   network: "devnet" | "mainnet-beta" | "testnet";
 }> = ({ children, network }) => {
-  const endpoint =
-    "https://solana-mainnet.g.alchemy.com/v2/mSSt0hYTZTKiDCQwz8TLgt7duMQLueDZ";
+  // const endpoint =
+  //   "https://solana-mainnet.g.alchemy.com/v2/mSSt0hYTZTKiDCQwz8TLgt7duMQLueDZ";
+  const endpoint = "https://mainnet.helius-rpc.com/?api-key=c31c3d98-af72-4a89-a7ec-67d26e17da22";
   const wallets = useMemo(() => {
     return [
       new walletAdapterWallets.PhantomWalletAdapter(),

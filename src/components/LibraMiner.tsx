@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 //import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 //import WalletContextProvider from "./WalletContextProvider";
 import * as anchor from "@project-serum/anchor";
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import { ComputeBudgetProgram, LAMPORTS_PER_SOL, PublicKey, SystemProgram, sendAndConfirmRawTransaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import {
   AnchorWallet,
   useAnchorWallet,
   useConnection,
 } from "@solana/wallet-adapter-react";
 import idl from "../idl.json";
+import { encode } from 'bs58';
 import { ContractData, UserData } from "../interface";
 import { INITIALIZER } from "../constants";
 import ErrorPopup from "./ErrorPopup";
@@ -33,7 +34,7 @@ const Miner = () => {
   const [program, setProgram] = useState<anchor.Program>();
   const [loading, setLoading] = useState<boolean>(false);
   const [refAddress, setRefAddress] = useState<string>("");
-  const [priority, setPriority] = useState<"high" | "low" | "medium">("high");
+  const [priority, setPriority] = useState<"high" | "low" | "medium" | "veryHigh">("medium");
   const location = useLocation();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
@@ -88,6 +89,26 @@ const Miner = () => {
     }
   };
 
+  // async function getPriorityFeeEstimate(transaction: anchor.web3.Transaction) {
+  //   const response = await fetch(connection.rpcEndpoint, {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       jsonrpc: "2.0",
+  //       id: "1",
+  //       method: "getPriorityFeeEstimate",
+  //       params: [
+  //         {
+  //           transaction: encode(transaction.serialize()),
+  //           options: { includeAllPriorityFeeLevels: true },
+  //         },
+  //       ],
+  //     }),
+  //   });
+  //   const data = await response.json();
+  //   return data.result;
+  // }
+
   const confirmTxn = async (signature: string) => {
     const block = await connection.getLatestBlockhash();
     await connection.confirmTransaction({
@@ -103,8 +124,7 @@ const Miner = () => {
       return;
     }
     if (program && wallet && contractData) {
-      console.log(`Deposit Amount: ${depositAmount}`);
-      handleLoading();
+      setLoading(true);
       const [minerAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("miner"), wallet.publicKey.toBuffer()],
         program.programId
@@ -123,18 +143,82 @@ const Miner = () => {
         feeCollector: contractData.feeCollector,
         systemProgram: SystemProgram.programId,
       };
-      await program.methods
+      try {
+        await program.methods
         .deposit(new anchor.BN(depositAmount * LAMPORTS_PER_SOL))
         .accounts({ ...accounts })
         .rpc()
         .then(confirmTxn);
-
-      setLoading(false);
+        alertSuccess("Deposit Successfull ✅🚀");
+      } catch (e) {
+        console.log(e);
+        alertError("Deposit Failed ❌❌")
+      }
     } else {
       alertError("Program not initialized...");
-      setLoading(false);
     }
+    setLoading(false);
   };
+  // const handleDepositWithPriorityFees = async () => {
+  //   if (depositAmount <= 0 || !depositAmount) {
+  //     alertError("Enter valid amount");
+  //     return;
+  //   }
+  //   if (program && wallet && contractData) {
+  //     handleLoading();
+  //     const [minerAccount] = PublicKey.findProgramAddressSync(
+  //       [Buffer.from("miner"), wallet.publicKey.toBuffer()],
+  //       program.programId
+  //     );
+  //     const [mineAccount] = PublicKey.findProgramAddressSync(
+  //       [Buffer.from("mine"), initializer.toBuffer()],
+  //       program.programId
+  //     );
+  //     const referrer = refAddress ? new PublicKey(refAddress) : null;
+  //     const accounts = {
+  //       depositor: wallet.publicKey,
+  //       minerAccount,
+  //       mineAccount,
+  //       referrer: referrer,
+  //       vault: contractData.vault,
+  //       feeCollector: contractData.feeCollector,
+  //       systemProgram: SystemProgram.programId,
+  //     };
+  //     const methodCall = await program.methods
+  //       .deposit(new anchor.BN(depositAmount * LAMPORTS_PER_SOL))
+  //       .accounts({ ...accounts })
+  //     const txn = await methodCall.transaction();
+  //     const blockHash = await connection.getLatestBlockhash();
+  //     txn.recentBlockhash = blockHash.blockhash;
+  //     txn.feePayer = wallet.publicKey;
+  //     const signedTx = await wallet.signTransaction(txn);
+  //     const fees = await getPriorityFeeEstimate(signedTx);
+  //     //console.log(fees.priorityFeeLevels, priority);
+  //     const priorityRate = fees.priorityFeeLevels.veryHigh;
+  //     const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+  //       microLamports: priorityRate * 4
+  //     });
+  //     txn.add(computePriceIx);
+  //     try {
+  //       const blockHash = await connection.getLatestBlockhash();
+  //       txn.recentBlockhash = blockHash.blockhash;
+  //       const signedTx = await wallet.signTransaction(txn);
+  //       await sendAndConfirmRawTransaction(connection, signedTx.serialize());
+  //       alertSuccess("Deposit successful");
+  //       //methodCall.postInstructions([computePriceIx]).rpc().then(confirmTxn);
+  //       //await sendAndConfirmTransaction(connection, txn, [wallet]);
+  //     } catch (e) {
+  //       console.log(e);
+  //       alertError("Error Confirming Transaction")
+  //     }
+  //     // methodCall.rpc().then(confirmTxn);
+  //     setLoading(false);
+  //     await setUp(program, wallet);
+  //   } else {
+  //     alertError("Program not initialized...");
+  //     setLoading(false);
+  //   };
+  // };
 
   const handleCompound = async () => {
     if (program && wallet && userData) {
@@ -157,6 +241,7 @@ const Miner = () => {
         .accounts({ ...compoundAccounts })
         .rpc()
         .then(confirmTxn);
+      alertSuccess("Compound successful");
       setLoading(false);
     } else {
       alertError("No active user account found for program to compound...");
@@ -285,6 +370,8 @@ const Miner = () => {
   };
 
   const setUp = async (program: anchor.Program, wallet: AnchorWallet) => {
+    // const priorityFee = await connection.getRecentPrioritizationFees();
+    // console.log(priorityFee)
     const [mineAccount] = PublicKey.findProgramAddressSync(
       [Buffer.from("mine"), initializer.toBuffer()],
       program.programId
@@ -459,19 +546,25 @@ const Miner = () => {
                         className={`${priority == "low" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
                         onClick={() => setPriority("low")}
                       >
-                        <p>Low (1 SOL)</p>
+                        <p>Low</p>
                       </button>
                       <button
                         className={`${priority == "medium" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
                         onClick={() => setPriority("medium")}
                       >
-                        <p>Medium (2 SOL)</p>
+                        <p>Medium</p>
                       </button>
                       <button
                         className={`${priority == "high" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
                         onClick={() => setPriority("high")}
                       >
-                        <p>High (3 SOL)</p>
+                        <p>High</p>
+                      </button>
+                      <button
+                        className={`${priority == "veryHigh" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
+                        onClick={() => setPriority("veryHigh")}
+                      >
+                        <p>Very High</p>
                       </button>
                     </div>
                   </div>
