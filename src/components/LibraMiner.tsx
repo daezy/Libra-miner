@@ -34,7 +34,7 @@ const Miner = () => {
   const [program, setProgram] = useState<anchor.Program>();
   const [loading, setLoading] = useState<boolean>(false);
   const [refAddress, setRefAddress] = useState<string>("");
-  const [priority, setPriority] = useState<"high" | "low" | "medium" | "veryHigh">("medium");
+  const [priority, setPriority] = useState<"none" | "high" | "low" | "medium" | "veryHigh">("medium");
   const location = useLocation();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
@@ -89,36 +89,95 @@ const Miner = () => {
     }
   };
 
-  // async function getPriorityFeeEstimate(transaction: anchor.web3.Transaction) {
-  //   const response = await fetch(connection.rpcEndpoint, {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({
-  //       jsonrpc: "2.0",
-  //       id: "1",
-  //       method: "getPriorityFeeEstimate",
-  //       params: [
-  //         {
-  //           transaction: encode(transaction.serialize()),
-  //           options: { includeAllPriorityFeeLevels: true },
-  //         },
-  //       ],
-  //     }),
-  //   });
-  //   const data = await response.json();
-  //   return data.result;
-  // }
+  async function getPriorityFeeEstimate(transaction: anchor.web3.Transaction) {
+    const response = await fetch(connection.rpcEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "1",
+        method: "getPriorityFeeEstimate",
+        params: [
+          {
+            transaction: encode(transaction.serialize()),
+            options: { includeAllPriorityFeeLevels: true },
+          },
+        ],
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
 
   const confirmTxn = async (signature: string) => {
     const block = await connection.getLatestBlockhash();
-    await connection.confirmTransaction({
+    const confirmation = await connection.confirmTransaction({
       signature,
       ...block,
     });
-    return signature;
+    return confirmation.value
   };
 
-  const handleDeposit = async () => {
+  // const handleDeposit = async () => {
+  //   if (depositAmount <= 0 || !depositAmount) {
+  //     alertError("Enter valid amount");
+  //     return;
+  //   }
+  //   if (program && wallet && contractData) {
+  //     setLoading(true);
+  //     const [minerAccount] = PublicKey.findProgramAddressSync(
+  //       [Buffer.from("miner"), wallet.publicKey.toBuffer()],
+  //       program.programId
+  //     );
+  //     const [mineAccount] = PublicKey.findProgramAddressSync(
+  //       [Buffer.from("mine"), initializer.toBuffer()],
+  //       program.programId
+  //     );
+  //     const referrer = refAddress ? new PublicKey(refAddress) : null;
+  //     const accounts = {
+  //       depositor: wallet.publicKey,
+  //       minerAccount,
+  //       mineAccount,
+  //       referrer: referrer,
+  //       vault: contractData.vault,
+  //       feeCollector: contractData.feeCollector,
+  //       systemProgram: SystemProgram.programId,
+  //     };
+  //     try {
+  //       await program.methods
+  //       .deposit(new anchor.BN(depositAmount * LAMPORTS_PER_SOL))
+  //       .accounts({ ...accounts })
+  //       .rpc()
+  //       .then(confirmTxn);
+  //       alertSuccess("Deposit Successfull ✅🚀");
+  //     } catch (e) {
+  //       console.log(e);
+  //       alertError("Deposit Failed ❌❌")
+  //     }
+  //   } else {
+  //     alertError("Program not initialized...");
+  //   }
+  //   setLoading(false);
+  // };
+
+  const getDepositPriorityRate = async (
+    depositIx: anchor.web3.TransactionInstruction, 
+    wallet: AnchorWallet, priorityLevel: string
+  ) => {
+    if (priorityLevel == "none") {
+      return 100000 // defaults to 0.1 lamports
+    }
+    const txn = new anchor.web3.Transaction();
+    txn.add(depositIx);
+    const blockHash = await connection.getLatestBlockhash();
+    txn.recentBlockhash = blockHash.blockhash;
+    txn.feePayer = wallet.publicKey;
+    const signedTx = await wallet.signTransaction(txn);
+    const fees = await getPriorityFeeEstimate(signedTx);
+    return fees.priorityFeeLevels[priorityLevel];
+  }
+
+  const handleDepositWithPriorityFees = async () => {
     if (depositAmount <= 0 || !depositAmount) {
       alertError("Enter valid amount");
       return;
@@ -143,82 +202,42 @@ const Miner = () => {
         feeCollector: contractData.feeCollector,
         systemProgram: SystemProgram.programId,
       };
-      try {
-        await program.methods
+      const depositIx = await program.methods
         .deposit(new anchor.BN(depositAmount * LAMPORTS_PER_SOL))
-        .accounts({ ...accounts })
-        .rpc()
-        .then(confirmTxn);
-        alertSuccess("Deposit Successfull ✅🚀");
+        .accounts({ ...accounts }).instruction();
+      try {
+        const priorityRate = await getDepositPriorityRate(depositIx, wallet, priority);
+        const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+          units: 200000
+        })
+        const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: priorityRate
+        });
+        const txn = new anchor.web3.Transaction();
+        txn.add(computePriceIx);
+        txn.add(computeUnitLimitIx);
+        txn.add(depositIx);
+        const blockHash = await connection.getLatestBlockhash();
+        txn.recentBlockhash = blockHash.blockhash;
+        txn.feePayer = wallet.publicKey;
+        const signedTx = await wallet.signTransaction(txn);
+        const signature = await connection.sendRawTransaction(signedTx.serialize());
+        const confirmation = await confirmTxn(signature);
+        if (!confirmation.err) {
+          alertSuccess("Deposit successful ✅");
+          await setUp(program, wallet);
+        } else {
+          alertError("Deposit Failed ❌")
+        }
       } catch (e) {
         console.log(e);
-        alertError("Deposit Failed ❌❌")
+        alertError("Error Confirming Transaction!!. Please reload page after 5 seconds before retry.")
       }
     } else {
       alertError("Program not initialized...");
-    }
+    };
     setLoading(false);
   };
-  // const handleDepositWithPriorityFees = async () => {
-  //   if (depositAmount <= 0 || !depositAmount) {
-  //     alertError("Enter valid amount");
-  //     return;
-  //   }
-  //   if (program && wallet && contractData) {
-  //     handleLoading();
-  //     const [minerAccount] = PublicKey.findProgramAddressSync(
-  //       [Buffer.from("miner"), wallet.publicKey.toBuffer()],
-  //       program.programId
-  //     );
-  //     const [mineAccount] = PublicKey.findProgramAddressSync(
-  //       [Buffer.from("mine"), initializer.toBuffer()],
-  //       program.programId
-  //     );
-  //     const referrer = refAddress ? new PublicKey(refAddress) : null;
-  //     const accounts = {
-  //       depositor: wallet.publicKey,
-  //       minerAccount,
-  //       mineAccount,
-  //       referrer: referrer,
-  //       vault: contractData.vault,
-  //       feeCollector: contractData.feeCollector,
-  //       systemProgram: SystemProgram.programId,
-  //     };
-  //     const methodCall = await program.methods
-  //       .deposit(new anchor.BN(depositAmount * LAMPORTS_PER_SOL))
-  //       .accounts({ ...accounts })
-  //     const txn = await methodCall.transaction();
-  //     const blockHash = await connection.getLatestBlockhash();
-  //     txn.recentBlockhash = blockHash.blockhash;
-  //     txn.feePayer = wallet.publicKey;
-  //     const signedTx = await wallet.signTransaction(txn);
-  //     const fees = await getPriorityFeeEstimate(signedTx);
-  //     //console.log(fees.priorityFeeLevels, priority);
-  //     const priorityRate = fees.priorityFeeLevels.veryHigh;
-  //     const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
-  //       microLamports: priorityRate * 4
-  //     });
-  //     txn.add(computePriceIx);
-  //     try {
-  //       const blockHash = await connection.getLatestBlockhash();
-  //       txn.recentBlockhash = blockHash.blockhash;
-  //       const signedTx = await wallet.signTransaction(txn);
-  //       await sendAndConfirmRawTransaction(connection, signedTx.serialize());
-  //       alertSuccess("Deposit successful");
-  //       //methodCall.postInstructions([computePriceIx]).rpc().then(confirmTxn);
-  //       //await sendAndConfirmTransaction(connection, txn, [wallet]);
-  //     } catch (e) {
-  //       console.log(e);
-  //       alertError("Error Confirming Transaction")
-  //     }
-  //     // methodCall.rpc().then(confirmTxn);
-  //     setLoading(false);
-  //     await setUp(program, wallet);
-  //   } else {
-  //     alertError("Program not initialized...");
-  //     setLoading(false);
-  //   };
-  // };
 
   const handleCompound = async () => {
     if (program && wallet && userData) {
@@ -354,24 +373,10 @@ const Miner = () => {
         (userData.totalLocked * apy * interval) / (10000 * 31536000);
       const expectedReward = ((10000 - devFee) * totalReward) / 10000;
       setCurrentReward(expectedReward.toFixed(7));
-
-      // const dayOfStake = userData.depositTs * 1000;
-      // const dateOfStamp = new Date(dayOfStake);
-      // // const todayDate = new Date();
-      // // const result = todayDate.setDate(todayDate.getDate() + 14);
-      // const newDate = new Date();
-      // const timeDiff = newDate.getTime() - dateOfStamp.getTime();
-      // const dayDiff = timeDiff / (1000 * 3600 * 24);
-
-      // console.log(devFee);
-      // const rewards = userData.totalLocked * (dayDiff / 365) * (apy / 10000);
-      // console.log(rewards * ((10000 - devFee) / 10000));
     }
   };
 
   const setUp = async (program: anchor.Program, wallet: AnchorWallet) => {
-    // const priorityFee = await connection.getRecentPrioritizationFees();
-    // console.log(priorityFee)
     const [mineAccount] = PublicKey.findProgramAddressSync(
       [Buffer.from("mine"), initializer.toBuffer()],
       program.programId
@@ -459,11 +464,6 @@ const Miner = () => {
           <div className="md:w-[47%] container my-8 ">
             <div className="grid grid-cols-1 gap-4">
               <div className="bg-white px-4 py-8 w-full rounded-md  shadow pb-5">
-                {/*<div className="px-2 py-2 flex justify-between ">*/}
-                {/*  <p className="font-light text-[#5d5d5d]">Contract</p>*/}
-                {/*  <p className="text-[#0D47A1] font-bold">0.0 SOL</p>*/}
-                {/*</div>*/}
-
                 <div className="flex justify-between items-center mb-4">
                   <div className="">
                     <p className=" text-[#0D47A1] text-lg mb-1">Deposited</p>
@@ -520,7 +520,7 @@ const Miner = () => {
                           : `w-full p-2 mt-3 bg-[#0D47A1] rounded-md cursor-pointer text-white`
                       }
                       disabled={depositAmount <= 0}
-                      onClick={handleDeposit}
+                      onClick={handleDepositWithPriorityFees}
                     >
                       <p>DEPOSIT SOL</p>
                     </button>
@@ -542,6 +542,12 @@ const Miner = () => {
                     <h2>Priority Fees</h2>
 
                     <div className="flex flex-wrap gap-3 mt-4 ">
+                    <button
+                        className={`${priority == "none" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
+                        onClick={() => setPriority("none")}
+                      >
+                        <p>None</p>
+                      </button>
                       <button
                         className={`${priority == "low" ? "bg-[#0d48a1d3] text-slate-200" : "bg-[#0D47A114] text-[#0D47A1A3]"} border border-[#032E703D] p-1 px-2 rounded-md text-[14px]`}
                         onClick={() => setPriority("low")}
